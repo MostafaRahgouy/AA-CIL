@@ -14,7 +14,6 @@ def get_data(path):
 def get_data_dict(data):
     data_group = data.groupby('author_id')['text'].apply(list).reset_index()
     data_dict = dict(zip(data_group['author_id'], data_group['text']))
-    # data_dict = [{'author_id': author_id, 'contents': contents} for author_id, contents in data_pack.items()]
     return data_dict
 
 
