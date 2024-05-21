@@ -19,8 +19,6 @@ def get_data_dict(data):
 
 
 def get_sessions(train, val, test):
-    # [25, 23, 19, 11, 4, 45, 26, 9, 29, 16, 31, 21, 12, 3, 39, 38, 10, 24, 35, 0, 43, 18, 33, 48, 41, 30, 28, 20, 22, 42, 46, 36, 32, 44, 13, 49, 47, 2, 27, 37, 5, 34, 6, 8, 14, 15, 17, 1, 7, 40]
-
     author_ids = list(train.keys())
 
     random.shuffle(author_ids)
