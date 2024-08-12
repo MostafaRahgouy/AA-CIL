@@ -19,9 +19,7 @@ The output data should be in the following format:
 """
 
 import argparse
-import copy
 import random
-
 from utils import read_csv, set_seed, write_json
 
 
@@ -89,11 +87,11 @@ def get_single_session(train, val, test, author_ids):
     return {'train': selected_train, 'val': selected_val, 'test': selected_test}
 
 
-def write_data_sessions(data_sessions, dataset_name):
+def write_data_sessions(data_sessions, dataset_name, num_session):
     for session_idx, session in enumerate(data_sessions):
-        write_json(session['train'], f'../data/CIL/{dataset_name}_CIL/session_{session_idx}/train.json')
-        write_json(session['val'], f'../data/CIL/{dataset_name}_CIL/session_{session_idx}/val.json')
-        write_json(session['test'], f'../data/CIL/{dataset_name}_CIL/session_{session_idx}/test.json')
+        write_json(session['train'], f'../data/CIL/{num_session}_sessions/{dataset_name}_CIL/session_{session_idx}/train.json')
+        write_json(session['val'], f'../data/CIL/{num_session}_sessions/{dataset_name}_CIL/session_{session_idx}/val.json')
+        write_json(session['test'], f'../data/CIL/{num_session}_sessions/{dataset_name}_CIL/session_{session_idx}/test.json')
 
 
 def prepare_histogram_data(data_session):
@@ -112,7 +110,7 @@ def prepare_histogram_data(data_session):
     return histogram_data
 
 
-def get_sessions(train, val, test):
+def get_sessions(train, val, test, num_slices=6):
     mapping_ides = {'author_id_2_inc_id': {},
                     'inc_id_2_author_id': {}}  # this dictionary is going to use for map the original author ides to the incremental ides
 
@@ -122,7 +120,10 @@ def get_sessions(train, val, test):
 
     total_num_authors = len(author_ids)
 
-    slice_values = [0.5] + [0.1] * 5
+    if num_slices == 6:
+        slice_values = [0.5] + [0.1] * 5
+    else:
+        slice_values = [0.1] * 10
 
     data_sessions = []
     for s_value in slice_values:
@@ -148,14 +149,35 @@ def get_sessions(train, val, test):
     return flatten_data_sessions, mapping_ides, author_size_for_sessions, hist_data
 
 
+def get_data_partitions_stat(data_sessions, num_authors_per_session):
+    data_partition_stat = {}
+
+    test_size, test_author = 0, 0
+    for session, author_size_info in zip(data_sessions, num_authors_per_session.items()):
+        num_session, author_size = author_size_info[0], author_size_info[1]
+        test_size += len(session['test'])
+        test_author += author_size
+        data_partition_stat[num_session] = {'train': {'train_size': len(session['train']), 'train_author': author_size},
+                                            'val': {'val_size': len(session['val']), 'val_author': author_size},
+                                            'test': {'test_size': test_size, 'test_author': test_author}
+                                            }
+    return data_partition_stat
+
+
 if __name__ == '__main__':
     set_seed(seed_num=42)  # Set the seed for reproducibility
 
-    DATA2PATH = {'blog50': '../data/org/blog50', 'imdb62': '../data/org/imdb62'}
+    DATA2PATH = {'blog50': '../data/org/blog50',
+                 'imdb62': '../data/org/imdb62',
+                 'ccat50': '../data/org/ccat50',
+                 'blog1000': '../data/org/blog1000',
+                 'arxiv100': '../data/org/arxiv100'
+                 }
 
     PARSER = argparse.ArgumentParser()
     PARSER.add_argument('--dataset', '-d', type=str, help='Dataset used for build CIL data',
-                        choices=DATA2PATH.keys(), default='blog50')
+                        choices=DATA2PATH.keys(), default='arxiv100')
+    PARSER.add_argument('--num_slices', '-num_s', type=int, help='number of sessions for CIL', choices=[6, 10], default=10)
     ARGS = PARSER.parse_args()
 
     RAW_TRAIN, RAW_VAL, RAW_TEST = get_data(DATA2PATH[ARGS.dataset])
@@ -164,9 +186,13 @@ if __name__ == '__main__':
     VAL_DATA = get_data_dict(RAW_VAL)
     TEST_DATA = get_data_dict(RAW_TEST)
 
-    DATA_SESSIONS, MAPPING_IDES, AUTHOR_SIZE_FOR_SESSIONS, HIST_DATA = get_sessions(TRAIN_DATA, VAL_DATA, TEST_DATA)
+    DATA_SESSIONS, MAPPING_IDES, AUTHOR_SIZE_FOR_SESSIONS, HIST_DATA = get_sessions(TRAIN_DATA, VAL_DATA, TEST_DATA,
+                                                                                    num_slices=ARGS.num_slices)
 
-    write_data_sessions(DATA_SESSIONS, ARGS.dataset)
-    write_json(MAPPING_IDES, f'../data/CIL/{ARGS.dataset}_CIL/mapping_ides.json')
-    write_json(AUTHOR_SIZE_FOR_SESSIONS, f'../data/CIL/{ARGS.dataset}_CIL/authors_partition_config.json')
+    DATA_PARTITION_STAT = get_data_partitions_stat(DATA_SESSIONS, AUTHOR_SIZE_FOR_SESSIONS)
+
+    write_data_sessions(DATA_SESSIONS, ARGS.dataset, num_session=ARGS.num_slices)
+    write_json(MAPPING_IDES, f'../data/CIL/{ARGS.num_slices}_sessions/{ARGS.dataset}_CIL/mapping_ides.json')
+    write_json(AUTHOR_SIZE_FOR_SESSIONS, f'../data/CIL/{ARGS.num_slices}_sessions/{ARGS.dataset}_CIL/authors_partition_config.json')
+    write_json(DATA_PARTITION_STAT, f'../data/CIL/{ARGS.num_slices}_sessions/{ARGS.dataset}_CIL/data_partition_stat.json')
     write_json(HIST_DATA, f'../analysis/hist_data/{ARGS.dataset}.json')
