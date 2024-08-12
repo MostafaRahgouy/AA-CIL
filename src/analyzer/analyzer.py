@@ -68,31 +68,99 @@ def plot_histogram(data1, data2, filename='../analysis/histogram.pdf'):
     plt.show()
 
 
-def plot_incremental_learning(authors1, accuracies1, dataset1, authors2, accuracies2, dataset2,
-                              file_path='../analysis/inc_acc.pdf'):
-    fig, axs = plt.subplots(1, 2, figsize=(14, 6))
+# def plot_incremental_learning(authors1, accuracies1, dataset1, authors2, accuracies2, dataset2,
+#                               file_path='../analysis/inc_acc.pdf'):
+#     fig, axs = plt.subplots(1, 2, figsize=(16.5, 5.5))
+#
+#     # Define a larger set of marker shapes and colors
+#     markers = ['o', 's', '^', 'D', '*', 'P', 'X', 'v', '>', '<', 'p', 'h', 'H', 'd', '3', '|' ]  # Different shapes
+#     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'orange', 'purple', 'brown', 'pink', 'lime', 'gray', 'navy', 'teal']  # More colors
+#
+#     # Determine the total number of models from one of the accuracies dictionaries
+#     total_models = len(accuracies1)
+#
+#     # Create combinations of markers and colors
+#     marker_color_combinations = [(marker, color) for marker, color in zip(markers, colors)]
+#
+#     # Check if the number of models exceeds available combinations
+#     if total_models > len(marker_color_combinations):
+#         raise ValueError("The number of models exceeds the number of unique marker-color combinations available.")
+#
+#     # First subplot
+#     for idx, (label, acc) in enumerate(accuracies1.items()):
+#         marker, color = marker_color_combinations[idx % len(marker_color_combinations)]
+#         axs[0].plot(authors1, list(acc.values()), marker=marker, linestyle='-', color=color, label=label, linewidth=1.0)
+#     axs[0].set_title(dataset1, fontsize=10)
+#     axs[0].set_xlabel('Number of Authors', fontsize=8)
+#     axs[0].set_ylabel('Accuracy (%)', fontsize=8)
+#     axs[0].grid(True)
+#     axs[0].set_xticks(authors1)
+#     for author in authors1:
+#         axs[0].axvline(x=author, color='gray', linestyle='--', linewidth=0.6)
+#
+#     # Second subplot
+#     for idx, (label, acc) in enumerate(accuracies2.items()):
+#         marker, color = marker_color_combinations[idx % len(marker_color_combinations)]
+#         axs[1].plot(authors2, list(acc.values()), marker=marker, linestyle='-', color=color, label=label, linewidth=1.0)
+#     axs[1].set_title(dataset2, fontsize=10)
+#     axs[1].set_xlabel('Number of Authors', fontsize=8)
+#     axs[1].set_ylabel('Accuracy (%)', fontsize=8)
+#     axs[1].grid(True)
+#     axs[1].set_xticks(authors2)
+#     for author in authors2:
+#         axs[1].axvline(x=author, color='gray', linestyle='--', linewidth=0.6)
+#
+#     # Combine legends, removing duplicates
+#     handles, labels = [], []
+#     for ax in axs:
+#         for handle, label in zip(*ax.get_legend_handles_labels()):
+#             if label not in labels:
+#                 handles.append(handle)
+#                 labels.append(label)
+#     fig.legend(handles, labels, loc='upper center', ncol=len(labels), fontsize=8)
+#
+#     plt.tight_layout(rect=[0, 0, 1, 0.92])  # Adjust layout to make room for the legend
+#     plt.savefig(file_path)
 
-    # First subplot
-    for label, acc in accuracies1.items():
-        axs[0].plot(authors1, list(acc.values()), marker='o', linestyle='-', label=label)
-    axs[0].set_title(dataset1, fontsize=14)
-    axs[0].set_xlabel('Number of Authors', fontsize=14)
-    axs[0].set_ylabel('Accuracy (%)', fontsize=14)
-    axs[0].grid(True)
-    axs[0].set_xticks(authors1)
-    for author in authors1:
-        axs[0].axvline(x=author, color='gray', linestyle='--', linewidth=0.6)
 
-    # Second subplot
-    for label, acc in accuracies2.items():
-        axs[1].plot(authors2, list(acc.values()), marker='o', linestyle='-', label=label)
-    axs[1].set_title(dataset2, fontsize=14)
-    axs[1].set_xlabel('Number of Authors', fontsize=14)
-    axs[1].set_ylabel('Accuracy (%)', fontsize=14)
-    axs[1].grid(True)
-    axs[1].set_xticks(authors2)
-    for author in authors2:
-        axs[1].axvline(x=author, color='gray', linestyle='--', linewidth=0.6)
+def plot_incremental_learning(datasets, file_path='../analysis/inc_acc.pdf'):
+    num_datasets = len(datasets)
+
+    # Adjust figure size dynamically based on the number of subplots
+    fig, axs = plt.subplots(1, num_datasets, figsize=(4.5 * num_datasets, 5.5))
+
+    # Ensure axs is always an array, even if there's only one subplot
+    if num_datasets == 1:
+        axs = [axs]
+
+    # Define a larger set of marker shapes and colors
+    markers = ['o', 's', '^', 'D', '*', 'P', 'X', 'v', '>', '<', 'p', 'h', 'H', 'd', '3', '|']
+    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'orange', 'purple', 'brown', 'pink', 'lime', 'gray', 'navy', 'teal']
+
+    com_c_m_mo = {}
+    for ds in datasets:
+        for model in ds[1].keys():
+            if model not in com_c_m_mo.keys():
+                com_c_m_mo.update({model: (markers.pop(0), colors.pop(0))})
+
+    for i, (authors, accuracies, dataset_name) in enumerate(datasets):
+
+        # Plot each model in the dataset
+        for idx, (label, acc) in enumerate(accuracies.items()):
+            marker, color = com_c_m_mo[label]
+            axs[i].plot(authors, list(acc.values()), marker=marker, linestyle='-', color=color, label=label, linewidth=1.0)
+
+        axs[i].set_title(dataset_name, fontsize=10)
+
+        # Only add x and y labels to the rightmost plot
+        if i == 0:
+            axs[i].set_xlabel('Number of Authors', fontsize=8)
+            axs[i].set_ylabel('Accuracy (%)', fontsize=8)
+
+        axs[i].grid(True)
+        axs[i].set_xticks(authors)
+        for author in authors:
+            axs[i].axvline(x=author, color='gray', linestyle='--', linewidth=0.6)
 
     # Combine legends, removing duplicates
     handles, labels = [], []
@@ -105,12 +173,11 @@ def plot_incremental_learning(authors1, accuracies1, dataset1, authors2, accurac
 
     plt.tight_layout(rect=[0, 0, 1, 0.92])  # Adjust layout to make room for the legend
     plt.savefig(file_path)
-    plt.show()
 
 
-def extract_acc(dir_path, dataset):
+def extract_acc(dir_path, dataset, num_sessions):
     all_acc = {}
-    num_authors_per_session = read_json(f'../data/CIL/{dataset}_CIL/authors_partition_config.json')
+    num_authors_per_session = read_json(f'../data/CIL/{num_sessions}_sessions/{dataset}_CIL/authors_partition_config.json')
     num_authors_inc = list(accumulate(list(num_authors_per_session.values())))
 
     for root, dirs, _ in os.walk(dir_path):

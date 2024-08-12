@@ -12,7 +12,12 @@ from utils import set_seed, read_data_sessions, check_dir_exist, write_json
 if __name__ == '__main__':
     set_seed(seed_num=42)  # Set the seed for reproducibility
 
-    DATA2PATH = {'blog50': '../data/CIL/blog50_CIL', 'imdb62': '../data/CIL/imdb62_CIL'}
+    DATA2PATH = {
+        'blog50': lambda num_sessions: f'../data/CIL/{num_sessions}_sessions/blog50_CIL',
+        'imdb62': lambda num_sessions: f'../data/CIL/{num_sessions}_sessions/imdb62_CIL',
+        'ccat50': lambda num_sessions: f'../data/CIL/{num_sessions}_sessions/ccat50_CIL',
+        'arxiv100': lambda num_sessions: f'../data/CIL/{num_sessions}_sessions/arxiv100_CIL'
+    }
 
     # Config
     PARSER = argparse.ArgumentParser()
@@ -28,6 +33,8 @@ if __name__ == '__main__':
     PARSER.add_argument('--batch_size', '-b', type=int, help='batch size', default=32)
 
     PARSER.add_argument('--device', '-de', type=str, choices=['cpu', 'cuda'], default='cuda')
+
+    PARSER.add_argument('--num_sessions', '-n_sessions', type=int, choices=[6, 10], default=10)
 
     PARSER.add_argument('--lr', '-lr', type=float, help='learning rate', default=2e-5)
 
@@ -57,6 +64,7 @@ if __name__ == '__main__':
     else:
         SAVE_DIR_PATH += '/CIL'
 
+    SAVE_DIR_PATH += f'/{CONFIG.num_sessions}_sessions'
     SAVE_DIR_PATH += f'/{CONFIG.model_type}'
 
     MODEL_DIR_PATH = f'{SAVE_DIR_PATH}/trained_models'
@@ -69,7 +77,8 @@ if __name__ == '__main__':
     # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     SELECTED_TRAIN_EXEMPLARS, SELECTED_VAL_EXEMPLARS = [], []
 
-    DATA_SESSIONS, MAPPING_IDES, AUTHORS_PARTITION_CONFIG = read_data_sessions(DATA2PATH[CONFIG.dataset])
+    DATA_SESSIONS, MAPPING_IDES, AUTHORS_PARTITION_CONFIG = read_data_sessions(
+        DATA2PATH[CONFIG.dataset](CONFIG.num_sessions), num_sessions=CONFIG.num_sessions)
 
     MODEL = WeightRegularize(model_type=CONFIG.model_type, n_epochs=CONFIG.n_epochs, device=CONFIG.device,
                              lr=CONFIG.lr, log_dir=LOG_DIR_PATH)

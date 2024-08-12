@@ -145,6 +145,8 @@ class LearningWithoutForgetting(BaseCIL):
             [head.eval() for head in self.heads]
 
             for batch_idx, batch in enumerate(val_loader):
+                teacher_logit = None
+
                 input_ids, attention_mask, targets = batch['input_ids'], batch['attention_mask'], batch['target']
                 input_ids = input_ids.to(self.device)
                 attention_mask = attention_mask.to(self.device)

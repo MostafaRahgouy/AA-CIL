@@ -24,7 +24,7 @@ This repository contains the implementation of the paper "Towards Effective Auth
 
 Each script contains the necessary parameters for the respective models. For example, model parameters can be found in `run_baseline`.
 
-## Trained models, results, and model predictions can be found here [link](https://drive.google.com/drive/folders/1N13penKBPuTgAnAUsbfFrY6NdG-tCBjI?usp=drive_link)
+## Trained models, results, and model predictions can be found here [link](https://drive.google.com/drive/folders/111zXVnCvimQa-TQDG5zoLyTD4iz8asL9?usp=drive_link)
 
 
 ![Alt text](images/table_result.png)
