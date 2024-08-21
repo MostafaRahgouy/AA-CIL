@@ -29,7 +29,17 @@ Each script contains the necessary parameters for the respective models. For exa
 
 ![Alt text](images/table_result.png)
 
+![Alt text](images/table_result_2.png)
 
 ![Alt text](images/inc_acc.png)
 
+
 ![Alt text](images/conf_m.png)
+
+![Alt text](analysis/blog50.png)
+
+![Alt text](analysis/imdb62.png)
+
+![Alt text](analysis/ccat50.png)
+
+![Alt text](images/DP_plot.png)
